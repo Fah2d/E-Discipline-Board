@@ -40,7 +40,7 @@
       label: MONTH_NAMES[month - 1] + ' ' + year,
       habits: habits || Array.from({ length: DEFAULT_HABITS }, () => ({ id: genId(), name: '' })),
       cells: {},
-      observations: ['', '', '', ''],
+      observations: ['', '', '', '', ''],
       goals: ['', '', '', '']
     };
   }
@@ -111,7 +111,8 @@
   }
 
   const NS = 'http://www.w3.org/2000/svg';
-  const CX = 300, CY = 300, R_INNER = 55, R_OUTER = 258;
+  const XHTML = 'http://www.w3.org/1999/xhtml';
+  const CX = 310, CY = 310, R_INNER = 62, R_OUTER = 280;
 
   function renderChart() {
     const board = getCurrentBoard();
@@ -121,14 +122,15 @@
     const H = habits.length;
     const N = daysInBoard(board);
     const ringW = (R_OUTER - R_INNER) / H;
-    const anglePerDay = 180 / N;
+    const anglePerDay = 360 / N;
 
+    // day 1 starts at the top (12 o'clock) and wraps clockwise, all the way around
     habits.forEach((habit, hi) => {
       const r0 = R_INNER + hi * ringW;
       const r1 = r0 + ringW;
       for (let d = 1; d <= N; d++) {
-        const a0 = 180 - (d - 1) * anglePerDay;
-        const a1 = 180 - d * anglePerDay;
+        const a0 = 90 - (d - 1) * anglePerDay;
+        const a1 = 90 - d * anglePerDay;
         const path = document.createElementNS(NS, 'path');
         path.setAttribute('d', annularSectorPath(CX, CY, r0, r1, a0, a1));
         const key = habit.id + '_' + d;
@@ -144,12 +146,12 @@
       }
     });
 
-    // day number labels around the outer arc
+    // day number labels around the outer edge
     for (let d = 1; d <= N; d++) {
-      const a0 = 180 - (d - 1) * anglePerDay;
-      const a1 = 180 - d * anglePerDay;
+      const a0 = 90 - (d - 1) * anglePerDay;
+      const a1 = 90 - d * anglePerDay;
       const mid = (a0 + a1) / 2;
-      const pos = polarToCartesian(CX, CY, R_OUTER + 14, mid);
+      const pos = polarToCartesian(CX, CY, R_OUTER + 16, mid);
       const text = document.createElementNS(NS, 'text');
       text.setAttribute('x', pos.x);
       text.setAttribute('y', pos.y);
@@ -160,23 +162,38 @@
       svg.appendChild(text);
     }
 
-    // baseline
-    const baseline = document.createElementNS(NS, 'line');
-    baseline.setAttribute('x1', CX - R_OUTER - 18);
-    baseline.setAttribute('y1', CY);
-    baseline.setAttribute('x2', CX + R_OUTER + 18);
-    baseline.setAttribute('y2', CY);
-    baseline.setAttribute('stroke', 'var(--line)');
-    baseline.setAttribute('stroke-width', '2');
-    svg.appendChild(baseline);
-
     // center hub
     const hub = document.createElementNS(NS, 'circle');
     hub.setAttribute('cx', CX);
     hub.setAttribute('cy', CY);
-    hub.setAttribute('r', R_INNER - 8);
+    hub.setAttribute('r', R_INNER - 6);
     hub.setAttribute('class', 'center-hub');
     svg.appendChild(hub);
+
+    // editable "MONTH/YEAR" label, living inside the hub
+    const fo = document.createElementNS(NS, 'foreignObject');
+    fo.setAttribute('x', CX - 75);
+    fo.setAttribute('y', CY - 34);
+    fo.setAttribute('width', 150);
+    fo.setAttribute('height', 68);
+    const wrap = document.createElementNS(XHTML, 'div');
+    wrap.setAttribute('class', 'hub-wrap');
+    const caption = document.createElementNS(XHTML, 'div');
+    caption.setAttribute('class', 'hub-caption');
+    caption.textContent = 'MONTH/YEAR';
+    const label = document.createElementNS(XHTML, 'div');
+    label.setAttribute('class', 'hub-label editable');
+    label.id = 'monthLabel';
+    label.contentEditable = 'true';
+    label.textContent = board.label;
+    label.addEventListener('input', () => {
+      board.label = label.textContent;
+      save();
+    });
+    wrap.appendChild(caption);
+    wrap.appendChild(label);
+    fo.appendChild(wrap);
+    svg.appendChild(fo);
   }
 
   function onCellClick(e) {
@@ -279,8 +296,14 @@
     const goalsWrap = document.getElementById('goalCells');
     goalsWrap.innerHTML = '';
     board.goals.forEach((text, i) => {
+      const cell = document.createElement('div');
+      cell.className = 'goal-cell';
+
+      const flag = document.createElement('div');
+      flag.className = 'goal-flag';
+
       const div = document.createElement('div');
-      div.className = 'goal-cell';
+      div.className = 'goal-text';
       div.contentEditable = 'true';
       div.dataset.placeholder = 'Goal';
       div.textContent = text;
@@ -288,14 +311,10 @@
         board.goals[i] = div.textContent;
         save();
       });
-      goalsWrap.appendChild(div);
-    });
-  }
 
-  function renderMonthLabel() {
-    const board = getCurrentBoard();
-    const label = document.getElementById('monthLabel');
-    label.textContent = board.label;
+      cell.append(flag, div);
+      goalsWrap.appendChild(cell);
+    });
   }
 
   /* ---------------- global labels ---------------- */
@@ -303,18 +322,11 @@
   function bindGlobalLabels() {
     document.querySelectorAll('[data-key]').forEach(el => {
       const key = el.dataset.key;
-      if (key === 'monthLabel') return; // per-board, handled separately
       if (state.labels[key] !== undefined) el.textContent = state.labels[key];
       el.addEventListener('input', () => {
         state.labels[key] = el.textContent;
         save();
       });
-    });
-
-    const monthLabel = document.getElementById('monthLabel');
-    monthLabel.addEventListener('input', () => {
-      getCurrentBoard().label = monthLabel.textContent;
-      save();
     });
   }
 
@@ -480,7 +492,6 @@
     renderHabits();
     renderChart();
     renderSidePanel();
-    renderMonthLabel();
   }
 
   function main() {
