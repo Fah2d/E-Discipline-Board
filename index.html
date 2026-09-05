@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>E-Discipline Board</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <span class="brand-dot"></span>
+    <span class="brand-name">E‑Discipline Board</span>
+  </div>
+  <div class="topbar-actions">
+    <button id="reportBtn" class="btn btn-dark">📊 Report</button>
+  </div>
+</header>
+
+<main class="board-wrap">
+  <section class="board" id="board">
+
+    <!-- Habits panel -->
+    <div class="panel habits-panel">
+      <h2 class="editable section-title" contenteditable="true" data-key="habitsTitle">HABITS:</h2>
+      <ol class="habit-list" id="habitList"></ol>
+      <button id="addHabitBtn" class="btn btn-ghost small">+ Add habit</button>
+      <p class="hint">Click a cell: <span class="dot dot-green"></span>done → <span class="dot dot-orange"></span>half → <span class="dot dot-red"></span>missed → clear</p>
+    </div>
+
+    <!-- Radial chart -->
+    <div class="panel chart-panel">
+      <svg id="chartSvg" viewBox="0 0 620 620" xmlns="http://www.w3.org/2000/svg"></svg>
+      <div class="month-nav">
+        <button id="prevMonth" class="btn btn-ghost tiny" title="Previous month">◀ Prev month</button>
+        <button id="nextMonth" class="btn btn-ghost tiny" title="Next month">Next month ▶</button>
+      </div>
+    </div>
+
+    <!-- Side panel -->
+    <div class="panel side-panel">
+      <div class="box observations-box">
+        <h3 class="editable section-title dark-title" contenteditable="true" data-key="obsTitle">OBSERVATIONS</h3>
+        <div class="lines" id="observationsLines"></div>
+      </div>
+
+      <div class="box goals-box">
+        <h3 class="editable section-title dark-title" contenteditable="true" data-key="goalsTitle">KEY GOALS</h3>
+        <div class="goal-cells" id="goalCells"></div>
+      </div>
+
+      <div class="brand-footer">
+        <div class="editable footer-title" contenteditable="true" data-key="footerTitle">DISCIPLINE.</div>
+      </div>
+    </div>
+
+  </section>
+</main>
+
+<!-- Report modal -->
+<div id="reportModal" class="modal-overlay hidden">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>Progress Report</h2>
+      <button id="closeReport" class="btn btn-ghost tiny">✕</button>
+    </div>
+    <div class="modal-tabs">
+      <button class="tab-btn active" data-scope="month">This Month</button>
+      <button class="tab-btn" data-scope="all">All Months</button>
+    </div>
+    <div id="reportBody" class="modal-body"></div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
